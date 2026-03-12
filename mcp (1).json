@@ -1,0 +1,969 @@
+{
+  "name": "mcp",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput ?? $json.input ?? $json.message ?? $json.body?.currentMessage ?? $json.body?.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are Katapa, an agentic AI assistant running on n8n with Ollama. Route every user request to the best available tool. Rules:\n- Complex research requiring multiple sources → research_agent sub-agent\n- Content creation (articles, blog posts, social media, marketing) → content_creator sub-agent\n- URL in message (http/https) → URL Content Fetcher tool\n- Quick web search/news/current events → SerpAPI Web Search tool\n- Weather/forecast → Weather Tool\n- Questions about uploaded docs/PDFs → Pinecone Search Tool\n- GitHub tasks → appropriate GitHub tool\n- Math → Calculator tool\n- Date/time → Current DateTime Tool\n- Sheets data → Google Sheets Reader tool\nBe concise. Use markdown. Confirm which tool you used."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        160,
+        -320
+      ],
+      "id": "a263a334-1c2f-4c61-b747-04e9fa8126d1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi! I'm ARIA, your AI assistant. I can help with research, weather, web content, GitHub tasks, calculations, and more. How can I assist you today?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -832,
+        0
+      ],
+      "id": "d1f683f0-3cc3-44f0-a36d-65d930163a44",
+      "name": "When chat message received",
+      "webhookId": "a31e50e0-2ff1-4e1d-bdaa-2c9823b35168"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -832,
+        -272
+      ],
+      "id": "30112181-db87-44e8-91c4-c55dbdd51161",
+      "name": "Webhook",
+      "webhookId": "1906b5ce-2737-48d2-a4bc-fed231d35560"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1168,
+        -288
+      ],
+      "id": "36501d19-a5f1-4ed1-92ee-b5d130394186",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "data",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f8939c40-a61f-4495-b797-20cf244751de",
+      "name": "Document Upload Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -832,
+        208
+      ],
+      "webhookId": "6bf6e884-aca2-40e1-bd79-ec32ebd87d0b"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "id": "f82bbd00-1880-41fa-8d3e-a55962fa257b",
+      "name": "Extract Document Content",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.data }}",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "id": "c3585171-4ca5-4304-b998-f0b7812af5c6",
+      "name": "Document Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1424,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "id": "220471a4-178c-444d-b764-14f27bfc02b9",
+      "name": "Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gita"
+        },
+        "options": {}
+      },
+      "id": "5a013afe-21f8-458f-9859-a00cc283a390",
+      "name": "Pinecone Vector Store Insert",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        1488,
+        336
+      ],
+      "credentials": {
+        "pineconeApi": {
+          "id": "2fPz7mIUolcLicim",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "id": "20767da5-6df9-4530-a482-ecd999dc5df2",
+      "name": "Ollama Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        832,
+        720
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "mF1Ykz0esfKh8FRr",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Document uploaded and indexed successfully\",\n  \"chunks\": {{ $json.chunks }}\n}",
+        "options": {}
+      },
+      "id": "bd568e53-5a48-4014-b03d-e03a87938044",
+      "name": "Document Upload Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1824,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=={{ $json.sessionId || $json.body.sessionId || $json.chatInput || \"default-session\" }}",
+        "contextWindowLength": 20
+      },
+      "id": "8c80b5d5-49cc-4c55-918a-ffc3c6161a40",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a198663c-0e4c-4879-82c9-4be39c560b10",
+      "name": "SerpAPI Web Search",
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        688,
+        288
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "NXnb4JgzOgryouUS",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get real-time weather and forecast for any location",
+        "url": "https://api.tomorrow.io/v4/weather/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "location",
+              "value": "={{ $fromAI('location','City or coordinates') }}"
+            },
+            {
+              "name": "apikey",
+              "value": "22yelD0N7VENnaRULhiQwyqvAjLKgD0e"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b72d77ad-52a3-46d8-87c8-016a6707d4a1",
+      "name": "Weather Tool",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        -320,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Fetch and summarise content from any URL the user shares. Trigger automatically when user message contains http or https link.",
+        "url": "={{ $fromAI('url','Full URL starting with https') }}",
+        "options": {}
+      },
+      "id": "3d4e24fb-a82e-46c4-b979-dd0ee8d8ab45",
+      "name": "URL Content Fetcher",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        -192,
+        -16
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "f6422d4b-af16-4294-9fee-865628ec4976",
+      "name": "Calculator",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Returns current date and time. Use when user asks about time or date.",
+        "jsCode": "return {\n  datetime: new Date().toISOString(),\n  date: new Date().toLocaleDateString('en-IN'),\n  time: new Date().toLocaleTimeString('en-IN')\n};"
+      },
+      "id": "af20069a-7947-4e82-84fb-8c05fea72dde",
+      "name": "Current DateTime Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $fromAI('repo_owner','GitHub username') }}"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $fromAI('repo_name','Repo name') }}"
+        },
+        "title": "={{ $fromAI('issue_title','Issue title') }}",
+        "body": "={{ $fromAI('issue_body','Issue description') }}",
+        "labels": [],
+        "assignees": []
+      },
+      "id": "573b01e0-25dd-4ce1-8db9-71880a9d9102",
+      "name": "GitHub Create Issue1",
+      "type": "n8n-nodes-base.githubTool",
+      "typeVersion": 1.1,
+      "position": [
+        160,
+        -16
+      ],
+      "webhookId": "64722117-d02b-4518-92e7-f56fa4140498",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "io4fzl71amWU8wo4",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "mode": "url",
+          "value": "={{ $fromAI('repo_owner','GitHub username') }}"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "url",
+          "value": "={{ $fromAI('repo_name','Repo name') }}"
+        },
+        "filePath": "={{ $fromAI('file_path','File path in repo') }}",
+        "fileContent": "={{ $fromAI('file_content','File content') }}",
+        "commitMessage": "={{ $fromAI('commit_message','Commit message') }}"
+      },
+      "id": "c730a641-db47-494b-a542-1fb61b8311e0",
+      "name": "GitHub Create File1",
+      "type": "n8n-nodes-base.githubTool",
+      "typeVersion": 1.1,
+      "position": [
+        288,
+        -32
+      ],
+      "webhookId": "1a37dc87-13f3-424f-8f3e-af1aa281ac20",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "io4fzl71amWU8wo4",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "repository",
+        "operation": "getPullRequests",
+        "owner": {
+          "__rl": true,
+          "mode": "url",
+          "value": "={{ $fromAI('repo_owner','GitHub username') }}"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "url",
+          "value": "={{ $fromAI('repo_name','Repo name') }}"
+        },
+        "getRepositoryPullRequestsFilters": {}
+      },
+      "id": "06d7625b-7388-4d1a-9a0b-96effe894f19",
+      "name": "GitHub Get Pull Requests1",
+      "type": "n8n-nodes-base.githubTool",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        -16
+      ],
+      "webhookId": "b6bf6276-8918-45e5-b0aa-3d1c7406821c",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "io4fzl71amWU8wo4",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "list",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $fromAI('repo_owner','GitHub username') }}"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $fromAI('repo_name','Repo name') }}"
+        }
+      },
+      "id": "3cd67489-fa95-47fd-9c98-59bf807a2f26",
+      "name": "GitHub List Files1",
+      "type": "n8n-nodes-base.githubTool",
+      "typeVersion": 1.1,
+      "position": [
+        576,
+        -16
+      ],
+      "webhookId": "cd5d5c31-7714-463b-9b27-2959fd9a26b0",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "io4fzl71amWU8wo4",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Read data from the connected Google Sheet",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1UZ3bjxm0xv-jJGzwvUVO8Ll32hxa59XYmHQInWbpCC4"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Sheet1"
+        },
+        "options": {}
+      },
+      "id": "e169a430-8b1d-4924-8c30-2cbb5af08cb1",
+      "name": "Google Sheets Reader",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        688,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wTzRC3bKjc2ZIqaQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search uploaded documents and PDFs for relevant information",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "gita",
+          "mode": "list",
+          "cachedResultName": "gita"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        832,
+        -16
+      ],
+      "id": "1545bc3a-a775-4a4b-bce8-22b10cc5f603",
+      "name": "Pinecone Search Tool",
+      "credentials": {
+        "pineconeApi": {
+          "id": "2fPz7mIUolcLicim",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:120b-cloud",
+        "options": {}
+      },
+      "id": "9528435c-fb81-47f8-86d4-e81ab0cb10ef",
+      "name": "Research Agent Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        192
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "mF1Ykz0esfKh8FRr",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Deep research agent for complex multi-source investigation. Use for thorough topic research.",
+        "text": "={{ $fromAI('research_task','The topic or question to research') }}",
+        "options": {
+          "systemMessage": "You are a research specialist. For each task: break into sub-questions, search each using SerpAPI, synthesise results. Output format — Summary: [2-3 sentences]. Key Findings: [bullets]. Sources: [URLs]. Confidence: [High/Medium/Low]."
+        }
+      },
+      "id": "52b5c0a6-3809-488e-a189-c9a459788efc",
+      "name": "Research Agent",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        1120,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:120b-cloud",
+        "options": {}
+      },
+      "id": "33076277-8d27-4737-bc66-d9bec80a3902",
+      "name": "Content Creator Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        1488,
+        192
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "mF1Ykz0esfKh8FRr",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Content writing specialist for articles, blog posts, social media, marketing copy, creative writing.",
+        "text": "={{ $fromAI('content_request','Content type, topic, tone, length, platform') }}",
+        "options": {
+          "systemMessage": "You are a content creation specialist. Write high-quality content based on the request. Always include: Title, Body, Call-to-action (if needed). Match tone to platform. Be clear, engaging, no filler."
+        }
+      },
+      "id": "0c99e985-e552-4194-b525-530addb56b26",
+      "name": "Content Creator",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        1408,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "embed-english-v3.0"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsCohere",
+      "typeVersion": 1,
+      "position": [
+        848,
+        528
+      ],
+      "id": "ceb1364d-dc85-47fb-81d1-f97d43714251",
+      "name": "Embeddings Cohere",
+      "credentials": {
+        "cohereApi": {
+          "id": "z4Fr8IXVFhdcGPzw",
+          "name": "CohereApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        192
+      ],
+      "id": "94ae195d-25e3-4371-b55d-24ed9f028bdc",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "ZHl44AdBkKcp57YP",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        192
+      ],
+      "id": "0e60db5b-8597-45a7-8986-da8e57359c8e",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "ZHl44AdBkKcp57YP",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:120b-cloud",
+        "options": {}
+      },
+      "id": "099b71aa-35ee-4956-9cd7-ab05a0e62784",
+      "name": "agent om",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        16
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "mF1Ykz0esfKh8FRr",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Pine search tool → Vector database\n\nEmbedding → Cohere, Ollama, GPT (nomic-embed-text)\n\nResearch Agent → SERP API key, web search\n\nDeep Analysis ↓\n\nContent Creation → Ollama, blogs, coding, social media\n\nDocument Loader → For PDF\n\nSession storage",
+        "height": 272,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3408,
+        -48
+      ],
+      "id": "6de4a885-31af-4e59-8ec8-421605b01905",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Upload Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Document Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Document Content": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Document Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store Insert",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Embeddings": {
+      "ai_embedding": [
+        []
+      ]
+    },
+    "Pinecone Vector Store Insert": {
+      "main": [
+        [
+          {
+            "node": "Document Upload Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI Web Search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "URL Content Fetcher": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Current DateTime Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub Create Issue1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub Create File1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub Get Pull Requests1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub List Files1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Reader": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Search Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Agent Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Creator Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Content Creator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Creator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Cohere": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Search Tool",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Pinecone Vector Store Insert",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agent om": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a3a66b71-00a7-47f8-8c1a-c4202e029133",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "50b320aafdc83cdb508f23ff555bb5af8035c858cc837b24c2deb80982b9ca7f"
+  },
+  "id": "jJfqYu04s9tQATFH",
+  "tags": []
+}
