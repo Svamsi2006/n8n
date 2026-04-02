@@ -1,0 +1,2054 @@
+{
+  "name": "Multi-Source Job Search with AI Scoring and Tracking",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "job-search",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "8effb2bd-6680-4238-bb68-5a999628ccff",
+      "name": "Job Search Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        736,
+        1216
+      ],
+      "webhookId": "4ae57449-1d76-4f07-8ae4-1dd21fb811b2"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "fb4fb516-ab20-405f-81e7-1b193cb7a3e6",
+      "name": "Telegram Bot Input",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        1024
+      ],
+      "webhookId": "859ed91c-50f6-4fca-a16e-3fd69ce91a4f",
+      "credentials": {
+        "telegramApi": {
+          "id": "3GAATm1lJbFmsqU9",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $input.item.json.message?.text || '';\nconst lines = text.split('\\n').map(l => l.trim());\n\nlet jobTitle = '', location = '', remote = false, seniority = 'Mid', platforms = ['LinkedIn', 'Indeed'], userEmail = '', telegramChatId = $input.item.json.message?.chat?.id || '';\n\nfor (const line of lines) {\n  if (line.toLowerCase().includes('job:') || line.toLowerCase().includes('title:')) jobTitle = line.split(':')[1]?.trim() || '';\n  if (line.toLowerCase().includes('location:')) location = line.split(':')[1]?.trim() || '';\n  if (line.toLowerCase().includes('remote:')) remote = line.toLowerCase().includes('true') || line.toLowerCase().includes('yes');\n  if (line.toLowerCase().includes('seniority:')) seniority = line.split(':')[1]?.trim() || 'Mid';\n  if (line.toLowerCase().includes('platforms:')) platforms = line.split(':')[1]?.split(',').map(p => p.trim()) || ['LinkedIn', 'Indeed'];\n  if (line.toLowerCase().includes('email:')) userEmail = line.split(':')[1]?.trim() || '';\n}\n\nreturn [{ json: { jobTitle, location, remote, seniority, platforms, userEmail, telegramChatId } }];"
+      },
+      "id": "918722ee-f623-46e0-bb36-cc393e8c42ae",
+      "name": "Parse Telegram Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        1024
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Job Search Request",
+        "formDescription": "Enter your job search criteria",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Job Title",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Location"
+            },
+            {
+              "fieldLabel": "Remote Only",
+              "fieldType": "checkbox",
+              "defaultValue": "false",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Remote Only"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Seniority",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Junior"
+                  },
+                  {
+                    "option": "Mid"
+                  },
+                  {
+                    "option": "Senior"
+                  },
+                  {
+                    "option": "Any"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Platforms",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "LinkedIn"
+                  },
+                  {
+                    "option": "Indeed"
+                  },
+                  {
+                    "option": "Glassdoor"
+                  },
+                  {
+                    "option": "Naukri"
+                  },
+                  {
+                    "option": "Wellfound"
+                  },
+                  {
+                    "option": "Remote.co"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Your Email",
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Telegram Chat ID"
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "6071d082-b4b3-4835-8a33-6663d70f9e7a",
+      "name": "Job Search Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        464,
+        1392
+      ],
+      "webhookId": "c66e8358-df9f-4ad8-8dc6-f58af9557ddc"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "bf1a3b3a-31b9-44e0-a98d-27b03325b944",
+      "name": "Unify All Inputs",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        960,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "jobTitle",
+              "value": "={{ $json.jobTitle || $json['Job Title'] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "location",
+              "value": "={{ $json.location || $json['Location'] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "remote",
+              "value": "={{ $json.remote || $json['Remote Only'] || false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "id-4",
+              "name": "seniority",
+              "value": "={{ $json.seniority || $json['Seniority'] || 'Mid' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "platforms",
+              "value": "={{ $json.platforms || $json['Platforms'] || ['LinkedIn', 'Indeed'] }}",
+              "type": "array"
+            },
+            {
+              "id": "id-6",
+              "name": "userEmail",
+              "value": "={{ $json.userEmail || $json['Your Email'] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "telegramChatId",
+              "value": "={{ $json.telegramChatId || $json['Telegram Chat ID'] || $('Telegram Bot Input').item.json.message?.chat?.id || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "92edfc62-57af-4418-80c7-1015d917d181",
+      "name": "Normalize Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://jsearch.p.rapidapi.com/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.jobTitle }} {{ $json.seniority }} {{ $json.location }}"
+            },
+            {
+              "name": "remote_jobs_only",
+              "value": "={{ $json.remote }}"
+            },
+            {
+              "name": "num_pages",
+              "value": "3"
+            },
+            {
+              "name": "date_posted",
+              "value": "today"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-RapidAPI-Key",
+              "value": "<__PLACEHOLDER_VALUE__rapidapi_key__>"
+            },
+            {
+              "name": "X-RapidAPI-Host",
+              "value": "jsearch.p.rapidapi.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cad07aa2-66eb-4462-a78c-1cd2408f306e",
+      "name": "Scrape Jobs via JSearch API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1408,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json;\nconst jobsData = response.data || [];\nconst userPlatforms = $('Normalize Fields').item.json.platforms || [];\n\nconst formattedJobs = jobsData.map(job => ({\n  job_id: job.job_id,\n  job_title: job.job_title,\n  company_name: job.employer_name,\n  location: `${job.job_city || ''} ${job.job_country || ''}`.trim(),\n  remote: job.job_is_remote || false,\n  apply_link: job.job_apply_link,\n  job_description: (job.job_description || '').substring(0, 400),\n  date_posted: job.job_posted_at_datetime_utc,\n  platform_source: job.job_publisher\n})).filter(job => userPlatforms.length === 0 || userPlatforms.some(platform => job.platform_source?.toLowerCase().includes(platform.toLowerCase())));\n\nreturn formattedJobs.map(job => ({ json: job }));"
+      },
+      "id": "7078ef83-306d-4116-a815-6e5fa85baf22",
+      "name": "Extract & Format Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "94e6e37b-5d03-4935-b65a-024b615b93a3",
+      "name": "Loop Each Job",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1856,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "6778f049-c63d-418b-aeb4-cf6b56bd73ba",
+      "name": "Ollama - Job Scorer",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        2032,
+        1440
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "OC22UE38KiQgH3NN",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Score this job 0-10 for relevance to the user preferences. User wants: {{ $('Normalize Fields').item.json.jobTitle }} in {{ $('Normalize Fields').item.json.location }}, remote: {{ $('Normalize Fields').item.json.remote }}, seniority: {{ $('Normalize Fields').item.json.seniority }}. Job: {{ $json.job_title }} at {{ $json.company_name }}, {{ $json.location }}. Description: {{ $json.job_description }}. Return ONLY: {\"score\": number, \"reason\": \"one sentence\", \"fitSummary\": \"two sentences\"}",
+        "options": {
+          "systemMessage": "You are a job relevance scoring assistant. Your only output must be a valid JSON object. No explanation, no markdown, no extra text. Only JSON."
+        }
+      },
+      "id": "1931695e-a326-414b-af5a-44ddd5415f75",
+      "name": "Score Job Relevance",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2080,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiOutput = $input.item.json.output || $input.item.json.text || ''; let parsed; try { const jsonMatch = aiOutput.match(/\\{[^}]+\\}/); parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(aiOutput); } catch (e) { parsed = { score: 0, reason: 'Failed to parse', fitSummary: 'Error in AI response' }; } const jobData = $('Loop Each Job').item.json; return [{ json: { ...jobData, score: parsed.score || 0, reason: parsed.reason || '', fitSummary: parsed.fitSummary || '' } }];"
+      },
+      "id": "09457623-408e-4be2-92aa-1776b5e5d4dc",
+      "name": "Parse AI Score & Merge",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2432,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.score }}",
+              "rightValue": "6",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "efeb69a7-4788-4828-8882-3723bb8ba3b0",
+      "name": "Filter Relevant Jobs (score >= 6)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2656,
+        1248
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "All Jobs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remote",
+              "displayName": "remote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "apply_link",
+              "displayName": "apply_link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_description",
+              "displayName": "job_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date_posted",
+              "displayName": "date_posted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "platform_source",
+              "displayName": "platform_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_score",
+              "displayName": "ai_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fit_summary",
+              "displayName": "fit_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date_added",
+              "displayName": "date_added",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "applied_via",
+              "displayName": "applied_via",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "application_status",
+              "displayName": "application_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "4be3cac7-edd4-47d1-b3eb-da0fa4940766",
+      "name": "Append Job to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2880,
+        1376
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DIa0MG9zOf3EOHbW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "30c9376d-e1f5-4bfc-96da-461fcb5e7f7d",
+      "name": "Collect Filtered Jobs",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2144,
+        944
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const jobs = $input.item.json; const jobCount = Array.isArray(jobs) ? jobs.length : (jobs.job_title ? 1 : 0); let message = `🎯 Job Search Results\\n\\n`; message += `Found ${jobCount} relevant job${jobCount !== 1 ? 's' : ''} matching your criteria!\\n\\n`; if (jobCount === 0) { message += 'No jobs found matching your preferences. Try adjusting your search criteria.'; } else { const jobArray = Array.isArray(jobs) ? jobs : [jobs]; jobArray.slice(0, 10).forEach((job, index) => { message += `${index + 1}. ${job.job_title || 'N/A'}\\n`; message += `   🏢 ${job.company_name || 'N/A'}\\n`; message += `   📍 ${job.location || 'N/A'}\\n`; message += `   ⭐ AI Score: ${job.score || 0}/10\\n`; message += `   💡 ${job.fitSummary || job.reason || ''}\\n`; message += `   🔗 ${job.apply_link || 'N/A'}\\n\\n`; }); if (jobCount > 10) { message += `... and ${jobCount - 10} more jobs in your Google Sheet!`; } } const chatId = $('Normalize Fields').item.json.telegramChatId; return [{ json: { chatId, message } }];"
+      },
+      "id": "120c046b-283d-4956-826c-c57ffff1ecff",
+      "name": "Format Telegram Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2432,
+        944
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "id": "0135583c-b560-4d00-88b2-f7bf92de2ea8",
+      "name": "Send Telegram Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2656,
+        944
+      ],
+      "webhookId": "78f6b6da-2311-42c5-a04e-104209687f51",
+      "credentials": {
+        "telegramApi": {
+          "id": "3GAATm1lJbFmsqU9",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "f6b89bfc-2022-4931-929c-11fedeac6ad1",
+      "name": "Every 5 Min Monitor",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        1920
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU",
+          "mode": "list",
+          "cachedResultName": "Job Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 903228913,
+          "mode": "list",
+          "cachedResultName": "User Preferences",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU/edit#gid=903228913"
+        },
+        "options": {}
+      },
+      "id": "6ab404a5-52be-4709-a2f4-40badf80d7c5",
+      "name": "Read Saved User Preferences",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        736,
+        1920
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DIa0MG9zOf3EOHbW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "00704d89-ae5e-430e-9fac-16e182848244",
+      "name": "Process Each User Profile",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        960,
+        1920
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://jsearch.p.rapidapi.com/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.jobTitle }} {{ $json.seniority }} {{ $json.location }}"
+            },
+            {
+              "name": "remote_jobs_only",
+              "value": "={{ $json.remote }}"
+            },
+            {
+              "name": "date_posted",
+              "value": "today"
+            },
+            {
+              "name": "num_pages",
+              "value": "2"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-RapidAPI-Host",
+              "value": "jsearch.p.rapidapi.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a7616fc0-11a7-4fed-b30d-95424df9395b",
+      "name": "Fetch Fresh Jobs - JSearch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1184,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString(); const jobs = $input.item.json.data || []; const filteredJobs = jobs.filter(job => { const jobDate = new Date(job.job_posted_at_datetime_utc); const cutoffDate = new Date(tenMinutesAgo); return jobDate >= cutoffDate; }).map(job => ({ job_id: job.job_id, job_title: job.job_title, company_name: job.employer_name, location: `${job.job_city || ''} ${job.job_country || ''}`.trim(), remote: job.job_is_remote, apply_link: job.job_apply_link, job_description: (job.job_description || '').substring(0, 300), date_posted: job.job_posted_at_datetime_utc, platform_source: job.job_publisher })); return filteredJobs.map(job => ({ json: job }));"
+      },
+      "id": "f27c13e2-6759-44cc-87c8-f4c7bb63cb5f",
+      "name": "Filter Jobs from Last 10 Minutes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2010df44-04db-4411-ab99-5d7c3908a55c",
+      "name": "Any Recent Jobs?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1632,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU",
+          "mode": "list",
+          "cachedResultName": "Job Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "All Jobs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "62e1be70-6219-491f-a712-d67c699b6b2e",
+      "name": "Get All Existing Job IDs",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1856,
+        1728
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DIa0MG9zOf3EOHbW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const newJobs = $('Filter Jobs from Last 10 Minutes').all().map(item => item.json);\nconst existingJobIds = new Set($('Get All Existing Job IDs').all().map(item => item.json.job_id));\nconst uniqueJobs = newJobs.filter(job => !existingJobIds.has(job.job_id));\nreturn uniqueJobs.map(job => ({ json: job }));"
+      },
+      "id": "ac263759-b100-40f1-ac61-7cfbf456dd0a",
+      "name": "Deduplicate New Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c84672c5-b2fd-4aef-b68c-9760dfe42078",
+      "name": "Any New Unique Jobs?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2304,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c3fc0e9d-277d-4bc8-a4f5-d7c80b54918f",
+      "name": "Process Each New Job",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2528,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU",
+          "mode": "list",
+          "cachedResultName": "Job Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "All Jobs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "499cb3d5-f356-40b5-8586-18257c462479",
+      "name": "Append New Job to Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2752,
+        1632
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DIa0MG9zOf3EOHbW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "b793af09-a171-4b9b-9b83-18fa3a32664e",
+      "name": "Collect All New Jobs",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2752,
+        1824
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const jobs = $input.all().map(item => item.json); const count = jobs.length; let message = `🔔 *NEW JOBS ALERT!*\n${count} new posting${count > 1 ? 's' : ''} in last 10 min\n\n`; jobs.forEach((job, index) => { message += `${index + 1}. *${job.job_title}*\n🏢 ${job.company_name}\n📍 ${job.location}${job.remote ? ' | 🌐 Remote' : ''}\n🕐 Posted: ${job.date_posted}\n🔗 Apply: ${job.apply_link}\n\n`; }); message += '✅ Saved to your job tracker sheet.'; return [{ json: { message } }];"
+      },
+      "id": "e902146a-52db-4ca2-9891-52f6d8a1f0da",
+      "name": "Format Telegram Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2976,
+        1824
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Read Saved User Preferences').item.json.telegramChatId }}",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "1305afd4-5434-4eb5-b627-06facee46cd3",
+      "name": "Send New Jobs Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3200,
+        1920
+      ],
+      "webhookId": "69649f26-8816-4da2-aa20-7238875d4f9e",
+      "credentials": {
+        "telegramApi": {
+          "id": "3GAATm1lJbFmsqU9",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU",
+          "mode": "list",
+          "cachedResultName": "Job Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "All Jobs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "e1f2937d-cded-428e-9440-24d551a62d0d",
+      "name": "New LinkedIn Job Trigger",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        512,
+        624
+      ],
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "aMHNaGBppNJJIo2N",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.apply_link }}",
+              "rightValue": "linkedin.com",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "id-2",
+              "leftValue": "={{ $json.applied_via }}",
+              "operator": {
+                "type": "string",
+                "operation": "empty"
+              }
+            },
+            {
+              "id": "id-3",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "New",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7af43a93-4f15-466e-bee0-324bf4351d38",
+      "name": "Is LinkedIn Easy Apply Job?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const applyLink = $input.item.json.apply_link || '';\nlet linkedinJobId = '';\n\n// Extract numeric job ID from LinkedIn URL\n// Common patterns: /jobs/view/123456789/ or ?currentJobId=123456789\nconst viewMatch = applyLink.match(/\\/jobs\\/view\\/(\\d+)/);\nconst queryMatch = applyLink.match(/currentJobId=(\\d+)/);\n\nif (viewMatch) {\n  linkedinJobId = viewMatch[1];\n} else if (queryMatch) {\n  linkedinJobId = queryMatch[1];\n}\n\nreturn [{\n  json: {\n    linkedinJobId: linkedinJobId,\n    job_id: $input.item.json.job_id || '',\n    job_title: $input.item.json.job_title || '',\n    company_name: $input.item.json.company_name || '',\n    location: $input.item.json.location || '',\n    apply_link: applyLink,\n    job_description: $input.item.json.job_description || ''\n  }\n}];"
+      },
+      "id": "7170b341-c43f-4bab-955b-e095f560fddd",
+      "name": "Extract LinkedIn Job ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1JAWIH46B1ISv6yzGX_NML3mRKKRr1F0t",
+          "mode": "list",
+          "cachedResultName": "cv-3.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/1JAWIH46B1ISv6yzGX_NML3mRKKRr1F0t/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "id": "65be1fea-2d52-40ca-87ea-df3fdd278da0",
+      "name": "Download Resume",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1184,
+        624
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "cg5SEgBokww62cRV",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "id": "5d167cd5-d70b-493b-9666-f8b8a3a34535",
+      "name": "Parse Resume Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1408,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{{ $json.linkedinJobId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "5f9ce789-a3de-4bf2-82c2-a04148dd72d4",
+      "name": "Fetch LinkedIn Job Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1632,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "ee0797f2-13be-4b78-9413-59844e34c262",
+      "name": "Ollama - LinkedIn Apply Writer",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        1904,
+        672
+      ],
+      "credentials": {
+        "ollamaApi": {
+          "id": "OC22UE38KiQgH3NN",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are helping someone apply for a job on LinkedIn. Based on the resume and job description, generate a JSON response ONLY (no extra text, no markdown fences) with these fields: { \"coverLetter\": \"max 300 word cover letter tailored to this job\", \"phone\": \"extracted from resume or empty string\", \"currentLocation\": \"city from resume\", \"yearsOfExperience\": number, \"willingToRelocate\": boolean, \"expectedSalary\": \"reasonable range in INR per annum\", \"linkedinHeadline\": \"compelling 10 word professional headline\", \"whyThisRole\": \"one sentence answer to why do you want this role\" }.\n\nResume:\n{{ $(\"Parse Resume Text\").item.json.text }}\n\nJob Title: {{ $(\"Extract LinkedIn Job ID\").item.json.job_title }}\nCompany: {{ $(\"Extract LinkedIn Job ID\").item.json.company_name }}\nJob Description: {{ $json.text }}",
+        "batching": {}
+      },
+      "id": "d1fd1647-b89f-48a7-a05c-4c943461cbe1",
+      "name": "Generate LinkedIn Application Package",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1856,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiOutput = $input.item.json.output || $input.item.json.text || '';\nlet parsed;\n\ntry {\n  // Try to extract JSON from the AI response\n  const jsonMatch = aiOutput.match(/\\{[^}]+\\}/s);\n  parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(aiOutput);\n} catch (e) {\n  // Fallback if parsing fails\n  parsed = {\n    coverLetter: '',\n    phone: '',\n    currentLocation: '',\n    yearsOfExperience: 0,\n    willingToRelocate: false,\n    expectedSalary: '',\n    linkedinHeadline: '',\n    whyThisRole: ''\n  };\n}\n\n// Get data from previous nodes\nconst linkedinJobId = $('Extract LinkedIn Job ID').item.json.linkedinJobId || '';\nconst job_id = $('Extract LinkedIn Job ID').item.json.job_id || '';\nconst company_name = $('Extract LinkedIn Job ID').item.json.company_name || '';\nconst job_title = $('Extract LinkedIn Job ID').item.json.job_title || '';\nconst resumeText = $('Parse Resume Text').item.json.text || '';\n\n// Build LinkedIn Easy Apply POST body\nconst applicationBody = {\n  jobId: linkedinJobId,\n  resume: resumeText,\n  coverLetter: parsed.coverLetter || '',\n  phone: parsed.phone || '',\n  currentLocation: parsed.currentLocation || '',\n  yearsOfExperience: parsed.yearsOfExperience || 0,\n  willingToRelocate: parsed.willingToRelocate || false,\n  expectedSalary: parsed.expectedSalary || '',\n  linkedinHeadline: parsed.linkedinHeadline || '',\n  whyThisRole: parsed.whyThisRole || ''\n};\n\nreturn [{\n  json: {\n    applicationBody: applicationBody,\n    coverLetter: parsed.coverLetter || '',\n    linkedinJobId: linkedinJobId,\n    job_id: job_id,\n    company_name: company_name,\n    job_title: job_title\n  }\n}];"
+      },
+      "id": "645666f0-619b-484a-b7d6-097bc2212a0b",
+      "name": "Parse AI Application Package",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2208,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.linkedin.com/jobs/apply/{{ $json.linkedinJobId }}/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Cookie",
+              "value": "<__PLACEHOLDER_VALUE__linkedin_session_cookie__>"
+            },
+            {
+              "name": "Csrf-Token",
+              "value": "<__PLACEHOLDER_VALUE__linkedin_csrf_token__>"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Li-Lang",
+              "value": "en_US"
+            },
+            {
+              "name": "X-Restli-Protocol-Version",
+              "value": "2.0.0"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.applicationBody }}",
+        "options": {}
+      },
+      "id": "46cbb0af-8ad7-4485-9486-1805fc917294",
+      "name": "LinkedIn Easy Apply - Submit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2432,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": "200",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "id-2",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": "201",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "id-3",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": "302",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "97b9cdf3-e535-4da8-9dc5-fd1fd5bd745c",
+      "name": "Application Successful?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2656,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "<__PLACEHOLDER_VALUE__Job Tracker Spreadsheet ID__>"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "All Jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "applied_via": "LinkedIn Easy Apply",
+            "application_status": "Applied",
+            "date_applied": "={{ $now }}",
+            "status": "Applied"
+          }
+        },
+        "options": {
+          "locationDefine": {
+            "values": {}
+          }
+        }
+      },
+      "id": "324e88ae-9159-4c79-a695-60a3bef63ec6",
+      "name": "Update Sheet - LinkedIn Applied",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2880,
+        624
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DIa0MG9zOf3EOHbW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Extract LinkedIn Job ID').item.json.telegramChatId }}",
+        "text": "=🔵 *LinkedIn Easy Apply Done!*\n\n🏢 {{ $('Parse AI Application Package').item.json.company_name }}\n💼 {{ $('Parse AI Application Package').item.json.job_title }}\n📍 {{ $('Extract LinkedIn Job ID').item.json.location }}\n✅ Application submitted!\n\n🔗 {{ $('Parse AI Application Package').item.json.apply_link }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "30266a63-4ebe-4ee5-a0d5-369d05a5530b",
+      "name": "Notify LinkedIn Applied",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        -160
+      ],
+      "webhookId": "b118fbd3-8b7f-4d24-820e-f89f11f2bc02",
+      "credentials": {
+        "telegramApi": {
+          "id": "3GAATm1lJbFmsqU9",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "All Jobs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZpbXyWdAMRzJThYFYTZpp0BQQ_hMZhUyVgxGdHlXAIU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "job_id"
+          ],
+          "schema": [
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remote",
+              "displayName": "remote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "apply_link",
+              "displayName": "apply_link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_description",
+              "displayName": "job_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date_posted",
+              "displayName": "date_posted",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "platform_source",
+              "displayName": "platform_source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_score",
+              "displayName": "ai_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fit_summary",
+              "displayName": "fit_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date_added",
+              "displayName": "date_added",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "applied_via",
+              "displayName": "applied_via",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "application_status",
+              "displayName": "application_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "68e1c579-dc28-4dd1-a480-a9d92e3aeaa5",
+      "name": "Update Sheet - Apply Failed",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        592,
+        80
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DIa0MG9zOf3EOHbW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Extract LinkedIn Job ID').item.json.telegramChatId }}",
+        "text": "=⚠️ *LinkedIn Auto-Apply Failed*\n\n🏢 {{ $('Parse AI Application Package').item.json.company_name }}\n💼 {{ $('Parse AI Application Package').item.json.job_title }}\n\nPlease apply manually:\n🔗 {{ $('Parse AI Application Package').item.json.apply_link }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "96157440-c724-4f21-a9c3-fb531ce05305",
+      "name": "Notify Apply Failed",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        848,
+        96
+      ],
+      "webhookId": "c122c2d0-4dcf-498d-b0be-efc4553d7218",
+      "credentials": {
+        "telegramApi": {
+          "id": "3GAATm1lJbFmsqU9",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Bot Input": {
+      "main": [
+        [
+          {
+            "node": "Parse Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job Search Webhook": {
+      "main": [
+        [
+          {
+            "node": "Unify All Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Unify All Inputs",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Unify All Inputs": {
+      "main": [
+        [
+          {
+            "node": "Normalize Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Fields": {
+      "main": [
+        [
+          {
+            "node": "Scrape Jobs via JSearch API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Jobs via JSearch API": {
+      "main": [
+        [
+          {
+            "node": "Extract & Format Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract & Format Jobs": {
+      "main": [
+        [
+          {
+            "node": "Loop Each Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama - Job Scorer": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Score Job Relevance",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Each Job": {
+      "main": [
+        [
+          {
+            "node": "Collect Filtered Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Score Job Relevance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Job Relevance": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Score & Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Score & Merge": {
+      "main": [
+        [
+          {
+            "node": "Filter Relevant Jobs (score >= 6)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Relevant Jobs (score >= 6)": {
+      "main": [
+        [
+          {
+            "node": "Append Job to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Job to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Each Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Filtered Jobs": {
+      "main": [
+        [
+          {
+            "node": "Format Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job Search Form": {
+      "main": [
+        [
+          {
+            "node": "Unify All Inputs",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Every 5 Min Monitor": {
+      "main": [
+        [
+          {
+            "node": "Read Saved User Preferences",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Saved User Preferences": {
+      "main": [
+        [
+          {
+            "node": "Process Each User Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Each User Profile": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Fetch Fresh Jobs - JSearch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Fresh Jobs - JSearch": {
+      "main": [
+        [
+          {
+            "node": "Filter Jobs from Last 10 Minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Jobs from Last 10 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Any Recent Jobs?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Recent Jobs?": {
+      "main": [
+        [
+          {
+            "node": "Get All Existing Job IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Existing Job IDs": {
+      "main": [
+        [
+          {
+            "node": "Deduplicate New Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deduplicate New Jobs": {
+      "main": [
+        [
+          {
+            "node": "Any New Unique Jobs?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any New Unique Jobs?": {
+      "main": [
+        [
+          {
+            "node": "Process Each New Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Each New Job": {
+      "main": [
+        [
+          {
+            "node": "Collect All New Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append New Job to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append New Job to Sheet": {
+      "main": [
+        [
+          {
+            "node": "Process Each New Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect All New Jobs": {
+      "main": [
+        [
+          {
+            "node": "Format Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Telegram Alert": {
+      "main": [
+        [
+          {
+            "node": "Send New Jobs Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send New Jobs Alert": {
+      "main": [
+        [
+          {
+            "node": "Process Each User Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New LinkedIn Job Trigger": {
+      "main": [
+        [
+          {
+            "node": "Is LinkedIn Easy Apply Job?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is LinkedIn Easy Apply Job?": {
+      "main": [
+        [
+          {
+            "node": "Extract LinkedIn Job ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract LinkedIn Job ID": {
+      "main": [
+        [
+          {
+            "node": "Download Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Resume": {
+      "main": [
+        [
+          {
+            "node": "Parse Resume Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Resume Text": {
+      "main": [
+        [
+          {
+            "node": "Fetch LinkedIn Job Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama - LinkedIn Apply Writer": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate LinkedIn Application Package",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch LinkedIn Job Details": {
+      "main": [
+        [
+          {
+            "node": "Generate LinkedIn Application Package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate LinkedIn Application Package": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Application Package",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Application Package": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Easy Apply - Submit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Easy Apply - Submit": {
+      "main": [
+        [
+          {
+            "node": "Application Successful?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Application Successful?": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet - LinkedIn Applied",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Sheet - Apply Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sheet - LinkedIn Applied": {
+      "main": [
+        [
+          {
+            "node": "Notify LinkedIn Applied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Sheet - Apply Failed": {
+      "main": [
+        [
+          {
+            "node": "Notify Apply Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f179c2eb-7e86-4041-aa07-291fd8afd1e9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3b912555e669bf97b78de59d5d2ec442e593335f68840fbf3ac04ad398f1fc81"
+  },
+  "id": "5aHwpWiU2IwDuv7mddVkX",
+  "tags": []
+}
