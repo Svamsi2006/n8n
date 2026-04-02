@@ -1,7 +1,10 @@
 <img width="1709" height="765" alt="image" src="https://github.com/user-attachments/assets/08123026-be19-49f8-a0c9-073d5224a564" />
+
 ## 🚀 AI RAG Chat bot
+
 <img width="1525" height="881" alt="image" src="https://github.com/user-attachments/assets/49c15cc6-78f1-4591-ba01-4f07cfb0040d" />
-## LinkedIn job searcher
+
+### LinkedIn job searcher
 ## 🧩 Overview
 
 This project defines a modular AI-powered workflow that processes incoming requests via webhooks, chat, and document uploads. It performs research, document processing, and content generation, and stores embeddings in a vector database for retrieval.
