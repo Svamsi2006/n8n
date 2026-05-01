@@ -1,0 +1,533 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -128,
+        272
+      ],
+      "id": "55cfe5bd-001f-47cd-bd26-b29fa97c0b79",
+      "name": "When chat message received",
+      "webhookId": "1232dad2-09f3-4e71-99d3-aa965857f686"
+    },
+    {
+      "parameters": {
+        "path": "sales-mcp-tools"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        512,
+        208
+      ],
+      "id": "91881d89-8980-45bb-9200-4040eeb9ba89",
+      "name": "MCP Server Trigger1",
+      "webhookId": "5a27780d-24e7-466c-94d1-43f28344afe8"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1UZ3bjxm0xv-jJGzwvUVO8Ll32hxa59XYmHQInWbpCC4",
+          "mode": "list",
+          "cachedResultName": "time_pass",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UZ3bjxm0xv-jJGzwvUVO8Ll32hxa59XYmHQInWbpCC4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "=products",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        944,
+        496
+      ],
+      "id": "d97ca819-d758-45c6-b59e-0f8e58bc7010",
+      "name": "products sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5s7VZ1ckqcdJSgC8",
+          "name": "vippp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1UZ3bjxm0xv-jJGzwvUVO8Ll32hxa59XYmHQInWbpCC4",
+          "mode": "list",
+          "cachedResultName": "time_pass",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UZ3bjxm0xv-jJGzwvUVO8Ll32hxa59XYmHQInWbpCC4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "=users",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        832,
+        496
+      ],
+      "id": "92953d5c-9f5d-4628-a53d-fee9cd29b250",
+      "name": "users sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5s7VZ1ckqcdJSgC8",
+          "name": "vippp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1UZ3bjxm0xv-jJGzwvUVO8Ll32hxa59XYmHQInWbpCC4",
+          "mode": "list",
+          "cachedResultName": "time_pass",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UZ3bjxm0xv-jJGzwvUVO8Ll32hxa59XYmHQInWbpCC4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1290987398,
+          "mode": "list",
+          "cachedResultName": "users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UZ3bjxm0xv-jJGzwvUVO8Ll32hxa59XYmHQInWbpCC4/edit#gid=1290987398"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "User ID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('User_ID', ``, 'string') }}",
+            "Username": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Username', ``, 'string') }}",
+            "Phone Number": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Phone_Number', ``, 'string') }}",
+            "Email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Email', ``, 'string') }}",
+            "Product ID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Product_ID', ``, 'string') }}",
+            "Product Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Product_Name', ``, 'string') }}",
+            "Payment Status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Payment_Status', ``, 'string') }}",
+            "Quantity Ordered": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Quantity_Ordered', ``, 'string') }}",
+            "Stock Available": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Stock_Available', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "Product Name"
+          ],
+          "schema": [
+            {
+              "id": "User ID",
+              "displayName": "User ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Username",
+              "displayName": "Username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product ID",
+              "displayName": "Product ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Product Name",
+              "displayName": "Product Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Payment Status",
+              "displayName": "Payment Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantity Ordered",
+              "displayName": "Quantity Ordered",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Stock Available",
+              "displayName": "Stock Available",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        704,
+        496
+      ],
+      "id": "bee6bf37-6d4d-44fa-bd57-282b95076fde",
+      "name": "append orders1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5s7VZ1ckqcdJSgC8",
+          "name": "vippp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1UZ3bjxm0xv-jJGzwvUVO8Ll32hxa59XYmHQInWbpCC4",
+          "mode": "list",
+          "cachedResultName": "time_pass",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UZ3bjxm0xv-jJGzwvUVO8Ll32hxa59XYmHQInWbpCC4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1290987398,
+          "mode": "list",
+          "cachedResultName": "users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1UZ3bjxm0xv-jJGzwvUVO8Ll32hxa59XYmHQInWbpCC4/edit#gid=1290987398"
+        },
+        "startIndex": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start_Row_Number', ``, 'number') }}",
+        "numberToDelete": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Number_of_Rows_to_Delete', ``, 'number') }}"
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        592,
+        496
+      ],
+      "id": "25c01520-8767-4413-8846-cc9dca933923",
+      "name": "delete user1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5s7VZ1ckqcdJSgC8",
+          "name": "vippp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        496
+      ],
+      "id": "96f3e8d7-d0e1-4fc3-8a26-e0921cf40442",
+      "name": "mail1",
+      "webhookId": "d21a14b7-69c4-4641-bc60-b1f2cf06ed61",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "xBoYkWYWDjDNHety",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://vamsai-n8n.hf.space/mcp/sales-mcp-tools",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        512
+      ],
+      "id": "998b0f01-dad2-40b4-8256-798e1fabc1de",
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-safeguard-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        16,
+        512
+      ],
+      "id": "ac0ed030-6cc8-457a-9a89-66a2a02bdff0",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "eY5UjPk3b8aobEyH",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        512
+      ],
+      "id": "a236c13b-9a69-42be-a7e7-5a8fbc24555f",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are a Sales Order Assistant for a product business. Use the MCP tools for products, users, order updates, deletions, and email sending. Show only the exact information the user asks for. Always check product data before answering availability, stock, or price questions. Before placing any order, verify stock, collect missing customer details, confirm payment status, and ask for final confirmation. Use payment status only as Order Processing, Successful, or Failed. If payment fails or the order is canceled, mark it as Failed. Never reveal unnecessary sheet data, internal row data, or unrelated customer information. If an order is confirmed and payment is confirmed, update the order and send a confirmation email."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        80,
+        272
+      ],
+      "id": "28845f61-a92e-4d4c-bc5a-9192d78a8821",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search uploaded documents and PDFs for relevant information When user ask about something that Just fetch from the pdf information",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "gita",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        1040,
+        400
+      ],
+      "id": "dbc7006e-ed7f-490f-808e-51ca5d2541b1",
+      "name": "Pinecone Search Tool",
+      "credentials": {
+        "pineconeApi": {
+          "id": "TwXMg359VIIRYwti",
+          "name": "Pinecone account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "embed-english-v3.0"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsCohere",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        608
+      ],
+      "id": "a7ecf3ae-8ff3-406a-a21b-74d67a991418",
+      "name": "Embeddings Cohere",
+      "credentials": {
+        "cohereApi": {
+          "id": "Uwlodhw8u7MnK9cG",
+          "name": "Cohere account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "products sheet1": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "users sheet1": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "append orders1": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete user1": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mail1": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        []
+      ]
+    },
+    "Pinecone Search Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Cohere": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Search Tool",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "77617e110e77e645348759505ee38e6b07254d5044fb8165357b5c5f0a0950d6"
+  }
+}
