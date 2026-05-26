@@ -57,21 +57,21 @@ docker exec -it hadoop bash
 **To practice Hive Data Warehousing (Unit IV):**
 
 ```cmd
-docker exec -it int312-hive hive
+docker exec -it hive hive
 
 ```
 
 **To practice HBase NoSQL (Unit V):**
 
 ```cmd
-docker exec -it int312-hbase hbase shell
+docker exec -it hbase hbase shell
 
 ```
 
 **To practice Cassandra CQL (Unit VI):**
 
 ```cmd
-docker exec -it int312-cassandra cqlsh
+docker exec -it cassandra cqlsh
 
 ```
 
