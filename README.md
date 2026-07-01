@@ -1,197 +1,109 @@
-<img width="1709" height="765" alt="image" src="https://github.com/user-attachments/assets/08123026-be19-49f8-a0c9-073d5224a564" />
+# AI Investment Research Agent
 
-## 🚀 AI RAG Chat bot
+A modern, high-fidelity web application built with **Next.js (App Router)** and **TypeScript** that resolves stock tickers, fetches real-time financials and news, calculates a deterministic fundamental score, and synthesizes a structured investment memo with a final recommendation: **Invest, Watch, or Pass**.
 
-<img width="1525" height="881" alt="image" src="https://github.com/user-attachments/assets/49c15cc6-78f1-4591-ba01-4f07cfb0040d" />
+## 🌟 Key Features
 
-### LinkedIn job searcher
-## 🧩 Overview
-
-This project defines a modular AI-powered workflow that processes incoming requests via webhooks, chat, and document uploads. It performs research, document processing, and content generation, and stores embeddings in a vector database for retrieval.
-
----
-
-## ⚙️ Architecture
-
-### 🔹 Entry Points
-
-- **Webhook Trigger**
-  - Accepts external POST requests
-  - Starts workflow execution
-
-- **Chat Trigger**
-  - Handles real-time user interaction
-
-- **Document Upload Webhook**
-  - Accepts files (e.g., PDFs)
+1. **Deterministic Scoring Engine (Hybrid Logic)**: A local rule-based engine computes Growth, Profitability, Valuation, Risk, and Headlines Sentiment scores. The LLM does not hallucinate these scores; it only explains and synthesizes the final narrative.
+2. **Robust Data Grounding**: Leverages `yahoo-finance2` for zero-setup, real-time financial metrics, historical income statement data, and news headlines. Full support for **Indian Stocks** (e.g. Tata Motors, Reliance) and global stocks.
+3. **Resilient Multi-Model Strategy**:
+   - **Primary**: Google Gemini API (`gemini-2.5-flash`) via the new `@google/genai` SDK.
+   - **Fallback**: Groq API (`llama-3.3-70b-versatile`) via the `groq-sdk` package in case of timeouts, rate-limits, or quota failures.
+4. **Premium UX**: Custom HSL-based dark mode theme with glassmorphic cards, step-by-step agent execution loaders, radial glowing backdrops, and interactive category progress meters.
+5. **Transparency Trace**: An expandable developer console renders the step-by-step execution logs of the agent flow directly in the UI.
 
 ---
 
-### 🤖 Core AI Agent
+## 🛠️ Architecture & Agent Flow
 
-The AI Agent acts as the central orchestrator:
+The agent flow runs as a lightweight, typed 3-node state machine in a Next.js Server Function/API endpoint:
 
-- Chat model integration  
-- Memory (Window Buffer)  
-- Tool execution  
-- Output parsing  
+```mermaid
+graph TD
+    Start[User Search Input] --> TickerSearch[api/search Ticker Autocomplete]
+    TickerSearch --> UserConfirm[Select Ticker & Run]
+    UserConfirm --> Node1[fetchResearchData Node]
+    Node1 --> Node2[computeScore Node]
+    Node2 --> Node3[generateMemo Node]
+    Node3 --> Frontend[Display Report & Logs Console]
+```
 
----
+### 1. `fetchResearchData` Node
+- Resolves search queries (e.g. "Tata Motors") to exchange tickers (e.g. `TATAMOTORS.NS`).
+- Fetches real-time price info, profile details (sector, description), fundamental metrics, and the last 3-4 years of annual financial statements.
+- Fetches recent news headlines.
 
-### 🧠 Memory
+### 2. `computeScore` Node
+Deterministic scoring calculations (0 to 100):
+- **Growth (25% weight)**: Calculated on YoY revenue and net income growth.
+- **Profitability (25% weight)**: Calculated on operating margin and return on equity (ROE).
+- **Risk (20% weight)**: Calculated on debt-to-equity (leverage) and current ratio (liquidity), penalized for high Beta volatility.
+- **Valuation (20% weight)**: Calculated on trailing P/E and PEG ratios.
+- **Sentiment (10% weight)**: Keyword analysis of news headlines for positive/negative triggers.
+- **Data Confidence**: Computes percentage of expected data fields successfully retrieved.
 
-- **Window Buffer Memory**
-  - Maintains conversation context
-  - Supports multi-turn interactions
-
----
-
-## 🛠️ Tools
-
-### Utility Tools
-- Weather API Tool
-- Calculator
-- Current DateTime Tool
-
-### Web & Data Tools
-- SerpAPI Web Search
-- URL Content Fetcher
-
-### GitHub Tools
-- Create Issue
-- Create File
-- List Files
-- Create Pull Request
-
-### Google Sheets
-- Read sheet data
+### 3. `generateMemo` Node
+- Constructs a structured markdown-aligned prompt with all facts.
+- Enforces strict JSON schemas for outputs.
+- Calls Gemini first; if it fails or times out (15s limit), retries once, then falls back to Groq (with a retry limit of 2).
 
 ---
 
-## 📄 Document Processing Pipeline
+## ⚙️ Setup & Run Instructions
 
-1. Document Loader  
-2. Text Splitter  
-3. Extract Document Content  
-4. Generate Embeddings  
-5. Store in Vector Database  
+### 1. Prerequisites
+- Node.js v18 or later.
+- NPM, PNPM, or Yarn.
 
----
+### 2. Environment Variables
+Create a `.env.local` file at the root of the project and add your API keys:
 
-## 🔍 Research Agent
+```env
+# Google Gemini API key (Primary LLM)
+GEMINI_API_KEY=your_gemini_api_key_here
 
-- Uses Groq Chat Model  
-- Performs web search via SerpAPI  
-- Conducts deep analysis  
+# Groq Console API key (Fallback LLM)
+GROQ_API_KEY=your_groq_api_key_here
+```
 
----
+### 3. Run Locally
+```bash
+# Install dependencies
+npm install
 
-## ✍️ Content Creator
+# Run the development server
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-- Powered by Groq Chat Model  
-- Generates:
-  - Blogs  
-  - Social media content  
-  - Code  
-  - Reports  
-
----
-
-## 🧠 Vector Database
-
-### Pinecone
-
-- Stores embeddings for:
-  - Documents  
-  - Research  
-  - Generated content  
-
-- Enables:
-  - Semantic search  
-  - Retrieval-Augmented Generation (RAG)  
-
----
-
-## 🔄 Workflow
-
-```text
-Input (Webhook / Chat / Upload)
-        ↓
-AI Agent (Orchestrator)
-        ↓
-Tool Usage
-        ↓
-Document Processing (if any)
-        ↓
-Research Agent (optional)
-        ↓
-Content Creator (optional)
-        ↓
-Embeddings Generation
-        ↓
-Pinecone Storage
-        ↓
-Response Output
+### 4. Build for Production
+```bash
+npm run build
+npm run start
 ```
 
 ---
 
-## 📤 Outputs
+## ⚖️ Trade-offs & Limitations
 
-- Webhook Response  
-- Chat Response  
-- Document Processing Result  
-
----
-
-## 🔐 Features
-
-- Modular architecture  
-- Multi-input support  
-- Tool-integrated AI  
-- RAG system  
-- Scalable vector storage  
-- Extensible design  
+1. **Unofficial Data Source**: We use `yahoo-finance2`, which scrapes Yahoo's public endpoints. It is free and requires no developer keys, but can be subject to rate limits or formatting changes.
+2. **Missing Sector Benchmarking**: In v1, valuation scores are absolute (e.g., PE < 15 is good). A premium improvement would be to compare metrics against industry/sector peers.
+3. **Keyword Sentiment Scorer**: The sentiment score uses a fast, local keyword dictionary rather than LLM classification to save API costs and prevent latency spikes.
 
 ---
 
-## 🧪 Use Cases
+## 📈 Example Ticker Configurations
 
-- AI research assistant  
-- Content automation  
-- Document Q&A system  
-- Knowledge base with semantic search  
-- Developer automation (GitHub integration)  
-
----
-
-## 🏁 Getting Started
-
-1. Add API Keys:
-   - Groq  
-   - SerpAPI  
-   - Pinecone  
-   - Cohere (optional)
-
-2. Configure environment variables  
-
-3. Deploy workflow  
-
-4. Trigger via:
-   - Webhook  
-   - Chat  
-   - Document upload  
+- **Tata Motors**: Enter `TATAMOTORS.NS` (or type "Tata Motors" in search)
+- **Reliance Industries**: Enter `RELIANCE.NS` (or type "Reliance")
+- **Infosys**: Enter `INFY.NS` (or type "Infosys")
+- **Apple Inc.**: Enter `AAPL`
+- **Tesla Inc.**: Enter `TSLA`
 
 ---
 
-## 📌 Notes
-
-- Embedding model: `nomic-embed-text`  
-- Session memory enabled  
-- Easily extendable with new tools  
-
----
-
-## 📄 License
-
-MIT License
+## 🚀 Future Enhancements
+- Interactive historical price line charts (e.g. using `recharts`).
+- SEC filing / annual report PDF scraping with vector embeddings for deeper qualitative insights.
+- Peer group comparison widget.
+- Saved research history local store.
